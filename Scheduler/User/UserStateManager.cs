@@ -30,6 +30,11 @@ namespace StudyXLS.User
         {
             _usersStateStorage[chatId] = page; 
             await page.UpdateAsync(_client, chatId, messageId);
-        }       
+        }
+        
+        public Page GetCurrentPage(long chatId)
+        {
+            return _usersStateStorage.TryGetValue(chatId,out var page) ? page : null;
+        }
     }
 }

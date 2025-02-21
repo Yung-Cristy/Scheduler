@@ -9,7 +9,7 @@ namespace StudyXLS.Pages
 {
     public class MainMenu : Page
     {
-        public override string Text => "Привет,меня зовут Шедулер. Чем могу тебе помочь?";
+        public override string Text => "Привет, меня зовут Шедулер. Чем могу тебе помочь?";
 
         public override ReplyKeyboardMarkup Keyboard => new(new[]
         {

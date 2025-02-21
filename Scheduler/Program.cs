@@ -3,10 +3,10 @@ using System.Threading.Tasks;
 using Telegram.Bot;
 using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
-
 using System.Collections.Concurrent;
 using StudyXLS.User;
 using StudyXLS.Pages;
+using Telegram.Bot.Types.Enums;
 
 class Program
 {
@@ -18,7 +18,7 @@ class Program
         var telegramClient = new TelegramBotClient(token: "7567444597:AAGTAeZ3tvitYv_CHqf0ZYhMy8fvh1TcIz8");
         _userStateManager = new UserStateManager(telegramClient);
 
-        telegramClient.StartReceiving(updateHandler: HandleUpdate, errorHandler: HandleError);
+        telegramClient.StartReceiving(updateHandler: HandleUpdate, errorHandler: HandleError,);
 
         Console.ReadLine();
     }
@@ -30,25 +30,37 @@ class Program
 
     private static async Task HandleUpdate(ITelegramBotClient client, Update update, CancellationToken token)
     {
-        if (update.Message != null && update.Message.Text == "/start")
+        switch (update.Type)
         {
-            await _userStateManager.ShowPageAsync(update.Message.Chat.Id, new MainMenu());
+            case UpdateType.Message:
+                await HandleMessage(client, update);
+                break;
+            
+        }
+    }
+
+    private static async Task HandleMessage(ITelegramBotClient client, Update update)
+    {
+        var chatId = update.Message.Chat.Id;
+        var messageId = update.Message.MessageId;
+        var text = update.Message.Text;
+
+        if (update.Message.Document != null)
+        {
+
         }
         else
         {
-            var chatId = update.Message.Chat.Id;
-            var messageId = update.Message.MessageId;
-            var text = update.Message.Text;
-
             switch (text)
             {
+                case "/start":
+                    await _userStateManager.ShowPageAsync(update.Message.Chat.Id, new MainMenu());
+                    break;
+
                 case "Изменить расписание":
                     await _userStateManager.UpdatePageAsync(chatId, messageId, new ChangeSchedulePage());
                     break;
             }
-        }
+        }     
     }
 }
-
-    
-
