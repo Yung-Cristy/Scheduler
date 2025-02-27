@@ -1,4 +1,4 @@
-﻿using StudyXLS.Pages;
+﻿using Scheduler.Pages;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -12,6 +12,6 @@ namespace Scheduler.Pages
     {
         public override string Text => throw new NotImplementedException();
 
-        public override ReplyKeyboardMarkup Keyboard => throw new NotImplementedException();
+        public override InlineKeyboardMarkup Keyboard => throw new NotImplementedException();
     }
 }

@@ -2,12 +2,12 @@
 using Telegram.Bot;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace StudyXLS.Pages
+namespace Scheduler.Pages
 {
     public abstract class Page
     {
         public abstract string Text { get; } 
-        public abstract ReplyKeyboardMarkup Keyboard { get; } 
+        public abstract InlineKeyboardMarkup Keyboard { get; } 
 
         public async Task SendAsync(ITelegramBotClient client, long chatId)
         {
@@ -15,9 +15,8 @@ namespace StudyXLS.Pages
                 chatId: chatId,
                 text: Text,
                 replyMarkup: Keyboard
-            );
+            );      
         }
-
         public async Task UpdateAsync(ITelegramBotClient client, long chatId, int messageId)
         {
             await client.DeleteMessage(chatId, messageId);
@@ -28,5 +27,17 @@ namespace StudyXLS.Pages
                 replyMarkup: Keyboard
             );
         }
+
+        public async Task EditAsync(ITelegramBotClient client, long chatId, int messageId)
+        {
+            await client.EditMessageText(
+                chatId: chatId,
+                messageId: messageId,
+                text: Text,
+                replyMarkup: Keyboard
+            );
+        }
+
+
     }
 }
