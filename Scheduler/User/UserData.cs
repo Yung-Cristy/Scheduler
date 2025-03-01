@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 
 namespace Scheduler.User
 {
-    class UserData
+    public  class UserData
     {
         public string Name { get; set; }
         public long TelegramId { get; set; }
         public Direction Direction { get; set; }
-
+        public int LastBotMessageId { get; set; }
     }
 }

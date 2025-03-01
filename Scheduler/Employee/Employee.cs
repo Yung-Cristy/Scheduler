@@ -30,8 +30,6 @@ namespace Scheduler.Employee
             Direction = direction;
         }
 
-
-
         public void ToggleDuty (Employee dutyEmployeeNow)
         {
             dutyEmployeeNow.IsDutyEmployee = !IsDutyEmployee;
