@@ -52,9 +52,9 @@ namespace Scheduler.Employee
             File.WriteAllText(_filePath, json);
         }
 
-        public void RemoveEmployee (String name, ITelegramBotClient client,long chatId)
+        public void RemoveEmployee (ITelegramBotClient client,long chatId, long telegramId)
         {
-            var deletingEmployee = _employees.FirstOrDefault(x => x.Name == name);
+            var deletingEmployee = _employees.FirstOrDefault(x => x.TelegramId == telegramId);
 
             if (deletingEmployee is null)
             {

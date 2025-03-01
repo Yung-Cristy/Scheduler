@@ -67,6 +67,7 @@ class Program
                     new ChangeSchedulePage(),
                     userData: userData);
                 break;
+
             case "Изменить список сотрудников":
                 await _userStateManager.EditPageAsync(
                     userId: userId, 
@@ -74,6 +75,7 @@ class Program
                     new ChangeEmployeesPage(),
                     userData: userData);
                 break;
+
             case "Добавить сотрудника":
                 await _userStateManager.EditPageAsync(
                     userId: userId,
@@ -81,6 +83,7 @@ class Program
                     new RequestNameOfNewEmployeePage(),
                     userData: userData);
                 break;
+
             case "Вернуться в главное меню": 
                 await _userStateManager.EditPageAsync(
                     messageId: messageId,
@@ -89,6 +92,13 @@ class Program
                     userData: userData);
                 break;
 
+            case "Удалить сотрудника":
+                await _userStateManager.EditPageAsync(
+                    messageId: messageId,
+                    userId: userId,
+                    page: new RequestNameOfDeletingEmployee(),
+                    userData: userData);
+                break;
         }
     }
 
@@ -167,6 +177,23 @@ class Program
                     chatId: userId,
                     text: "Некорректное направление. Используйте: 1C, WEB или Manager.");
             }
+        }
+        else if (_userStateManager.GetCurrentPage(userId) is RequestNameOfDeletingEmployee)
+        {
+            userData.TelegramId = long.Parse(text);
+
+            _employeesManager.RemoveEmployee(
+                client: client,
+                chatId: chatId,
+                telegramId: userData.TelegramId);
+
+            await _userStateManager.EditPageAsync(
+                userId: userId,
+                messageId: messageId,
+                page: new SuccessDeleteEmployeePage(telegramId: userData.TelegramId),
+                userData: userData);
+
+            await DeleteUserMessage(client, chatId, messageId);
         }
     }
 
