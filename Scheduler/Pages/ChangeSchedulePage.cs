@@ -5,20 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Telegram.Bot.Types.ReplyMarkups;
 
-namespace StudyXLS.Pages
+namespace Scheduler.Pages
 {
     public class ChangeSchedulePage : Page
     {
-        public override string Text => "Пожалуйста, загрузите заполненный шаблон в формате XLS (ссылка на пустой шаблон)";
+        public override string Text => "Что требуется сделать с расписанием?";
 
-        public override ReplyKeyboardMarkup Keyboard => new(new[]
-        {
-            new[] { new KeyboardButton("Загрузить расписание")},
-            new [] {new KeyboardButton("Удалить")}
-        })
-        {
-            ResizeKeyboard = true,
-            OneTimeKeyboard = true
-        };
+        public override InlineKeyboardMarkup Keyboard => new InlineKeyboardMarkup(
+    [
+        [
+            InlineKeyboardButton.WithCallbackData("Загрузить расписание"),
+            InlineKeyboardButton.WithCallbackData("Удалить расписание")
+        ]
+    ]);
     }
 }
