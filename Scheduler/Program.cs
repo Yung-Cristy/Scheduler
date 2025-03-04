@@ -52,18 +52,53 @@ class Program
         var chatId = update.CallbackQuery.Message.Chat.Id;
         var userId = update.CallbackQuery.From.Id;
 
+        if (!_userDataCache.TryGetValue(userId, out var userData))
+        {
+            userData = new UserData();
+            _userDataCache[userId] = userData;
+        }
+
         switch (inputCallback)
         {
             case "Изменить расписание":
-                await _userStateManager.EditPageAsync(userId, messageId, new ChangeSchedulePage());
-                break;
-            case "Изменить список сотрудников":
-                await _userStateManager.EditPageAsync(userId, messageId, new ChangeEmployeesPage());
-                break;
-            case "Добавить сотрудника":
-                await _userStateManager.EditPageAsync(userId, messageId, new RequestNameOfNewEmployeePage());
+                await _userStateManager.EditPageAsync(
+                    userId: userId,
+                    messageId: messageId,
+                    new ChangeSchedulePage(),
+                    userData: userData);
                 break;
 
+            case "Изменить список сотрудников":
+                await _userStateManager.EditPageAsync(
+                    userId: userId, 
+                    messageId: messageId, 
+                    new ChangeEmployeesPage(),
+                    userData: userData);
+                break;
+
+            case "Добавить сотрудника":
+                await _userStateManager.EditPageAsync(
+                    userId: userId,
+                    messageId: messageId,
+                    new RequestNameOfNewEmployeePage(),
+                    userData: userData);
+                break;
+
+            case "Вернуться в главное меню": 
+                await _userStateManager.EditPageAsync(
+                    messageId: messageId,
+                    userId: userId,
+                    page: new MainMenu(),
+                    userData: userData);
+                break;
+
+            case "Удалить сотрудника":
+                await _userStateManager.EditPageAsync(
+                    messageId: messageId,
+                    userId: userId,
+                    page: new RequestNameOfDeletingEmployee(),
+                    userData: userData);
+                break;
         }
     }
 
@@ -74,40 +109,67 @@ class Program
         var text = update.Message.Text;
         var userId = update.Message.From.Id;
 
+        if (!_userDataCache.TryGetValue(userId, out var userData))
+        {
+            userData = new UserData();
+            _userDataCache[userId] = userData;
+        }
+
         if (text == "/start")
         {
-            await _userStateManager.ShowPageAsync(userId, new MainMenu());
+            await _userStateManager.ShowPageAsync(
+                userId: userId,
+                page: new MainMenu(),
+                userData: userData);
+
+            await DeleteUserMessage(client, chatId, messageId);
         }
         else if (_userStateManager.GetCurrentPage(userId) is RequestNameOfNewEmployeePage)
         {
-            _userDataCache.AddOrUpdate(
-                key: userId,
-                addValue: new UserData { Name = text },
-                updateValueFactory: (x, y) =>
-                    {
-                        y.Name = text;
-                        return y;
-                    });
-            await _userStateManager.EditPageAsync(userId, messageId, new RequestTelegramIdOfNewEmployeePage());
+            userData.Name = text;
 
+            await DeleteUserMessage(client, chatId, messageId);
+
+            await _userStateManager.EditPageAsync(
+                userId: userId,
+                messageId: userData.LastBotMessageId,
+                page: new RequestTelegramIdOfNewEmployeePage(),
+                userData: userData);
         }
         else if (_userStateManager.GetCurrentPage(userId) is RequestTelegramIdOfNewEmployeePage)
         {
-            _userDataCache[userId].TelegramId = userId;
-            await _userStateManager.EditPageAsync(userId, messageId, new RequestDirectionOfNewEmployeePage());
+            userData.TelegramId = long.Parse(text);
+
+            await _userStateManager.EditPageAsync(
+                userId: userId,
+                messageId: messageId,
+                page: new RequestDirectionOfNewEmployeePage(),
+                userData: userData);
+
+            await DeleteUserMessage(client, chatId, messageId);
         }
         else if (_userStateManager.GetCurrentPage(userId) is RequestDirectionOfNewEmployeePage)
         {
             if (Enum.TryParse(text, out Direction direction))
             {
-                // Если преобразование успешно, обновляем Direction
-                _userDataCache[userId].Direction = direction;
+                userData.Direction = direction;
 
                 _employeesManager.AddEmployee(
                     employee: new Employee(
-                        name: _userDataCache[userId].Name,
-                        telegramId: _userDataCache[userId].TelegramId,
-                        direction: _userDataCache[userId].Direction));
+                        name: userData.Name,
+                        telegramId: userData.TelegramId,
+                        direction: userData.Direction));
+
+                await DeleteUserMessage(client, chatId, messageId);
+
+                await _userStateManager.UpdatePageAsync(
+                    userId: userId,
+                    messageId: userData.LastBotMessageId, 
+                    page: new SuccessAddNewEmployeePage(
+                        name: userData.Name,
+                        telegramId: userData.TelegramId,
+                        direction: userData.Direction),
+                        userData: userData);
             }
             else
             {
@@ -115,6 +177,37 @@ class Program
                     chatId: userId,
                     text: "Некорректное направление. Используйте: 1C, WEB или Manager.");
             }
+        }
+        else if (_userStateManager.GetCurrentPage(userId) is RequestNameOfDeletingEmployee)
+        {
+            userData.TelegramId = long.Parse(text);
+
+            _employeesManager.RemoveEmployee(
+                client: client,
+                chatId: chatId,
+                telegramId: userData.TelegramId);
+
+            await _userStateManager.EditPageAsync(
+                userId: userId,
+                messageId: messageId,
+                page: new SuccessDeleteEmployeePage(telegramId: userData.TelegramId),
+                userData: userData);
+
+            await DeleteUserMessage(client, chatId, messageId);
+        }
+    }
+
+    private static async Task DeleteUserMessage(ITelegramBotClient client, long chatId, int messageId)
+    {
+        try
+        {
+            await client.DeleteMessage(
+                chatId: chatId,
+                messageId: messageId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ошибка при удалении сообщения: {ex.Message}");
         }
     }
 }

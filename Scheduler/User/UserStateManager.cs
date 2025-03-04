@@ -21,25 +21,23 @@ namespace Scheduler.User
             _usersStateStorage = new ConcurrentDictionary<long, Page>();
         }
 
-        public async Task ShowPageAsync(long userId, Page page)
+        public async Task ShowPageAsync(long userId, Page page,UserData userData)
         {
             _usersStateStorage[userId] = page; 
-            await page.SendAsync(_client, userId);
+            await page.SendAsync(_client, userId,userData);
         }
 
-        public async Task UpdatePageAsync(long userId, int messageId, Page page)
+        public async Task UpdatePageAsync(long userId, int messageId, Page page, UserData userData)
         {
             _usersStateStorage[userId] = page; 
-            await page.UpdateAsync(_client, userId, messageId);
+            await page.UpdateAsync(_client, userId, messageId,userData);
         }
 
-        public async Task EditPageAsync(long userId, int messageId, Page page)
+        public async Task EditPageAsync(long userId, int messageId, Page page,   UserData userData)
         {
             _usersStateStorage[userId] = page;
-            await page.EditAsync(_client, userId, messageId);
+            await page.EditAsync(_client, userId, messageId,userData);
         }
-
-
 
         public Page GetCurrentPage(long userId)
         {
