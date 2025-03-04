@@ -96,8 +96,31 @@ class Program
                 await _userStateManager.EditPageAsync(
                     messageId: messageId,
                     userId: userId,
-                    page: new RequestNameOfDeletingEmployee(),
+                    page: new RequestTelegramIdOfDeletingEmployee(),
                     userData: userData);
+                break;
+            case "OneC":
+            case "Web":
+            case "Manager":
+                if (Enum.TryParse(inputCallback, out Direction direction))
+                {
+                    userData.Direction = direction;
+
+                    _employeesManager.AddEmployee(
+                        employee: new Employee(
+                            name: userData.Name,
+                            telegramId: userData.TelegramId,
+                            direction: userData.Direction));
+
+                    await _userStateManager.EditPageAsync(
+                        userId: userId,
+                        messageId: messageId,
+                        page: new SuccessAddNewEmployeePage(
+                            name: userData.Name,
+                            telegramId: userData.TelegramId,
+                            direction: userData.Direction),
+                        userData: userData);                   
+                }
                 break;
         }
     }
@@ -115,16 +138,29 @@ class Program
             _userDataCache[userId] = userData;
         }
 
+        var currentPage = _userStateManager.GetCurrentPage(userId);
+
         if (text == "/start")
         {
-            await _userStateManager.ShowPageAsync(
-                userId: userId,
-                page: new MainMenu(),
-                userData: userData);
+            if (userData.LastBotMessageId != 0)
+            {
+                await _userStateManager.EditPageAsync(
+                    userId: userId,
+                    messageId: userData.LastBotMessageId,
+                    page: new MainMenu(),
+                    userData: userData);
+            }
+            else
+            {
+                await _userStateManager.ShowPageAsync(
+                    userId: userId,
+                    page: new MainMenu(),
+                    userData: userData);
+            }
 
             await DeleteUserMessage(client, chatId, messageId);
         }
-        else if (_userStateManager.GetCurrentPage(userId) is RequestNameOfNewEmployeePage)
+        else if (currentPage is RequestNameOfNewEmployeePage)
         {
             userData.Name = text;
 
@@ -136,9 +172,10 @@ class Program
                 page: new RequestTelegramIdOfNewEmployeePage(),
                 userData: userData);
         }
-        else if (_userStateManager.GetCurrentPage(userId) is RequestTelegramIdOfNewEmployeePage)
+        else if (currentPage is RequestTelegramIdOfNewEmployeePage)
         {
             userData.TelegramId = long.Parse(text);
+            await DeleteUserMessage(client, chatId, messageId);
 
             await _userStateManager.EditPageAsync(
                 userId: userId,
@@ -146,54 +183,37 @@ class Program
                 page: new RequestDirectionOfNewEmployeePage(),
                 userData: userData);
 
-            await DeleteUserMessage(client, chatId, messageId);
+            
         }
-        else if (_userStateManager.GetCurrentPage(userId) is RequestDirectionOfNewEmployeePage)
-        {
-            if (Enum.TryParse(text, out Direction direction))
-            {
-                userData.Direction = direction;
-
-                _employeesManager.AddEmployee(
-                    employee: new Employee(
-                        name: userData.Name,
-                        telegramId: userData.TelegramId,
-                        direction: userData.Direction));
-
-                await DeleteUserMessage(client, chatId, messageId);
-
-                await _userStateManager.UpdatePageAsync(
-                    userId: userId,
-                    messageId: userData.LastBotMessageId, 
-                    page: new SuccessAddNewEmployeePage(
-                        name: userData.Name,
-                        telegramId: userData.TelegramId,
-                        direction: userData.Direction),
-                        userData: userData);
-            }
-            else
-            {
-                await client.SendMessage(
-                    chatId: userId,
-                    text: "Некорректное направление. Используйте: 1C, WEB или Manager.");
-            }
-        }
-        else if (_userStateManager.GetCurrentPage(userId) is RequestNameOfDeletingEmployee)
+        else if (currentPage is RequestTelegramIdOfDeletingEmployee)
         {
             userData.TelegramId = long.Parse(text);
 
-            _employeesManager.RemoveEmployee(
+            if (_employeesManager.IsContain(userData.TelegramId))
+            {
+                _employeesManager.RemoveEmployee(
                 client: client,
                 chatId: chatId,
                 telegramId: userData.TelegramId);
 
-            await _userStateManager.EditPageAsync(
-                userId: userId,
-                messageId: messageId,
-                page: new SuccessDeleteEmployeePage(telegramId: userData.TelegramId),
-                userData: userData);
+                await _userStateManager.EditPageAsync(
+                    userId: userId,
+                    messageId: messageId,
+                    page: new SuccessDeleteEmployeePage(telegramId: userData.TelegramId),
+                    userData: userData);
 
-            await DeleteUserMessage(client, chatId, messageId);
+                await DeleteUserMessage(client, chatId, messageId);
+            }
+            else
+            {
+                await _userStateManager.EditPageAsync(
+                    userId: userId,
+                    messageId: messageId,
+                    page: new NonExistentTelegramIdPage(),
+                    userData: userData);
+
+                await DeleteUserMessage(client, chatId, messageId);
+            }
         }
     }
 

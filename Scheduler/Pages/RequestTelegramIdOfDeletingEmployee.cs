@@ -7,7 +7,7 @@ using Telegram.Bot.Types.ReplyMarkups;
 
 namespace Scheduler.Pages
 {
-    class RequestNameOfDeletingEmployee : Page
+    class RequestTelegramIdOfDeletingEmployee : Page
     {
         public override string Text => "Введите Telegram ID сотрудника, которого необходимо удалить";
 
