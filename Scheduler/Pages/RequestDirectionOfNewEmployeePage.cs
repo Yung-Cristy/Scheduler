@@ -11,6 +11,13 @@ namespace Scheduler.Pages
     {
         public override string Text => "Укажите направление нового сотрудника";
 
-        public override InlineKeyboardMarkup Keyboard => null;
+        public override InlineKeyboardMarkup Keyboard => new InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton.WithCallbackData("1C","OneC"),
+                    InlineKeyboardButton.WithCallbackData("WEB","Web"),
+                    InlineKeyboardButton.WithCallbackData("Руководитель","Manager")
+                ]
+            ]);
     }
 }

@@ -69,11 +69,12 @@ namespace Scheduler.Employee
             }
         }
 
-        public  Employee GetEmployee (string name)
+        public  bool IsContain (long telegramId)
         {
-            return _employees.First(x => x.Name.ToLower() == name.ToLower());
+             return _employees.FirstOrDefault(x => x.TelegramId == telegramId) is not null;
+
         }
-        
+
         public List<Employee> GetAllEmployees()
         {
             return _employees;
