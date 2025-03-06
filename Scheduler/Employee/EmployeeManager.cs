@@ -52,32 +52,28 @@ namespace Scheduler.Employee
             File.WriteAllText(_filePath, json);
         }
 
-        public void RemoveEmployee (ITelegramBotClient client,long chatId, long telegramId)
+        public void RemoveEmployee(ITelegramBotClient client, long chatId, string name)
         {
-            var deletingEmployee = _employees.FirstOrDefault(x => x.TelegramId == telegramId);
-
-            if (deletingEmployee is null)
-            {
-                client.SendMessage(
-                    chatId: chatId,
-                    text: "Данный пользователь не найден");
-            }
-            else
-            {
-                _employees.Remove(deletingEmployee);
-                SaveEmployees();
-            }
+            var employee = _employees.FirstOrDefault(e => e.Name == name);
+            _employees.Remove(employee);
+            SaveEmployees();
         }
 
-        public  bool IsContain (long telegramId)
+        public  bool IsContain (string name)
         {
-             return _employees.FirstOrDefault(x => x.TelegramId == telegramId) is not null;
+             return _employees.FirstOrDefault(x => x.Name == name) is not null;
 
         }
 
         public List<Employee> GetAllEmployees()
         {
             return _employees;
+        }
+
+        public bool TryGetEmployee(string name, out Employee employee)
+        {
+            employee = _employees.FirstOrDefault(e => e.Name == name);
+            return employee is null;
         }
     }
 }

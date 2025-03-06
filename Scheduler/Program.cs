@@ -41,7 +41,6 @@ class Program
             case UpdateType.CallbackQuery:
                 await HandleCallbackQuery(client, update);
                 break;
-
         }
     }
 
@@ -70,8 +69,8 @@ class Program
 
             case "Изменить список сотрудников":
                 await _userStateManager.EditPageAsync(
-                    userId: userId, 
-                    messageId: messageId, 
+                    userId: userId,
+                    messageId: messageId,
                     new ChangeEmployeesPage(),
                     userData: userData);
                 break;
@@ -84,7 +83,7 @@ class Program
                     userData: userData);
                 break;
 
-            case "Вернуться в главное меню": 
+            case "Вернуться в главное меню":
                 await _userStateManager.EditPageAsync(
                     messageId: messageId,
                     userId: userId,
@@ -96,7 +95,7 @@ class Program
                 await _userStateManager.EditPageAsync(
                     messageId: messageId,
                     userId: userId,
-                    page: new RequestTelegramIdOfDeletingEmployee(),
+                    page: new RequestDeletingEmployee(_employeesManager),
                     userData: userData);
                 break;
             case "OneC":
@@ -119,7 +118,31 @@ class Program
                             name: userData.Name,
                             telegramId: userData.TelegramId,
                             direction: userData.Direction),
-                        userData: userData);                   
+                        userData: userData);
+                }
+                break;
+            default:
+                if (_userStateManager.GetCurrentPage(userId) is RequestDeletingEmployee)
+                {
+                    if (_employeesManager.IsContain(inputCallback))
+                    {
+                        _employeesManager.RemoveEmployee(
+                            client: client,
+                            chatId: chatId,
+                            name: inputCallback);
+
+                        await _userStateManager.EditPageAsync(
+                            userId: userId,
+                            messageId: messageId,
+                            page: new SuccessDeleteEmployeePage(inputCallback),
+                            userData: userData);
+                    }                    
+                }
+                else
+                {
+                    await client.SendMessage(
+                        chatId: userId,
+                        text: "Неизвестная команда.");
                 }
                 break;
         }
@@ -182,38 +205,6 @@ class Program
                 messageId: messageId,
                 page: new RequestDirectionOfNewEmployeePage(),
                 userData: userData);
-
-            
-        }
-        else if (currentPage is RequestTelegramIdOfDeletingEmployee)
-        {
-            userData.TelegramId = long.Parse(text);
-
-            if (_employeesManager.IsContain(userData.TelegramId))
-            {
-                _employeesManager.RemoveEmployee(
-                client: client,
-                chatId: chatId,
-                telegramId: userData.TelegramId);
-
-                await _userStateManager.EditPageAsync(
-                    userId: userId,
-                    messageId: messageId,
-                    page: new SuccessDeleteEmployeePage(telegramId: userData.TelegramId),
-                    userData: userData);
-
-                await DeleteUserMessage(client, chatId, messageId);
-            }
-            else
-            {
-                await _userStateManager.EditPageAsync(
-                    userId: userId,
-                    messageId: messageId,
-                    page: new NonExistentTelegramIdPage(),
-                    userData: userData);
-
-                await DeleteUserMessage(client, chatId, messageId);
-            }
         }
     }
 

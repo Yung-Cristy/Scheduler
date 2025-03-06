@@ -22,7 +22,16 @@ namespace Scheduler.Pages
         }
         public async Task UpdateAsync(ITelegramBotClient client, long chatId, int messageId, UserData userData)
         {
-            await client.DeleteMessage(chatId, messageId);
+            try
+            {
+                await client.DeleteMessage(chatId, messageId);
+            }
+            
+            catch
+            {
+                Console.WriteLine("Ошибка при обработке запроса");
+                return;
+            }
 
             var sentMessage = await client.SendMessage(
                 chatId: chatId,
