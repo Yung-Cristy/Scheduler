@@ -10,15 +10,15 @@ namespace Scheduler.Pages
 {
     public class SuccessDeleteEmployeePage : Page
     {
-        public override string Text => "Данный сотрудник удален";
-        private readonly long _telegramIdDeletedEmployee;
+        public override string Text => $"Сотрудник {_nameOfDeletedEmployee} успешно удален";
+        private readonly string  _nameOfDeletedEmployee;
 
         public override InlineKeyboardMarkup Keyboard => new InlineKeyboardMarkup(
             InlineKeyboardButton.WithCallbackData("Вернуться в главное меню")
         );
-        public SuccessDeleteEmployeePage(long telegramId)
+        public SuccessDeleteEmployeePage(string name)
         {
-            _telegramIdDeletedEmployee = telegramId;
+            _nameOfDeletedEmployee = name;
         }
     }
 }
